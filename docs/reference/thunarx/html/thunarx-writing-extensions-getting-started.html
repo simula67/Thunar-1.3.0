@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Getting Started</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
+<link rel="home" href="index.html" title="Thunar Extensions Reference Manual">
+<link rel="up" href="thunarx-writing-extensions.html" title="Part II. Writing Extensions">
+<link rel="prev" href="thunarx-writing-extensions.html" title="Part II. Writing Extensions">
+<link rel="next" href="thunarx-writing-extensions-advanced-topics.html" title="Advanced topics">
+<meta name="generator" content="GTK-Doc V1.15 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2"><tr valign="middle">
+<td><a accesskey="p" href="thunarx-writing-extensions.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="thunarx-writing-extensions.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">Thunar Extensions Reference Manual</th>
+<td><a accesskey="n" href="thunarx-writing-extensions-advanced-topics.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr></table>
+<div class="sect1" title="Getting Started">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="thunarx-writing-extensions-getting-started"></a>Getting Started</h2></div></div></div>
+<p>
+        Providers are <a class="link" href="ThunarxProviderPlugin.html" title="ThunarxProviderPlugin"><span class="type">ThunarxProviderPlugin</span></a>s loaded from shared libraries
+        installed in <code class="filename">$libdir/thunarx-2/</code>. The shared libraries are linked against the
+        <code class="systemitem">thunarx-2</code> library.
+      </p>
+<p>
+        The extensions must provide three public functions, <code class="function">thunar_extension_initialize()</code>,
+        <code class="function">thunar_extension_shutdown()</code> and <code class="function">thunar_extension_list_types()</code>.
+      </p>
+<p>
+        <code class="function">thunar_extension_initialize()</code> is passed a <a class="link" href="ThunarxProviderPlugin.html" title="ThunarxProviderPlugin"><span class="type">ThunarxProviderPlugin</span></a>
+        object, and is responsible to register all GTypes required by the extension. <code class="function">thunar_extension_shutdown()</code> should
+        perform any extension-specific shutdown required prior to unloading the extension. <code class="function">thunar_extension_list_types()</code>
+        returns an array of GTypes that represent the types of the providers exported by the extension. Thunar will instantiate
+        objects of those types when needed.
+      </p>
+<div class="example">
+<a name="id2679994"></a><p class="title"><b>Example 1. Basic Structure of an extension</b></p>
+<div class="example-contents">
+  <table class="listing_frame" border="0" cellpadding="0" cellspacing="0">
+    <tbody>
+      <tr>
+        <td class="listing_lines" align="right"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67</pre></td>
+        <td class="listing_code"><pre class="programlisting"><span class="preproc">#include</span><span class="normal"> </span><span class="string">&lt;gmodule.h&gt;</span>
+<span class="preproc">#include</span><span class="normal"> </span><span class="string">&lt;thunarx/thunarx.h&gt;</span>
+
+<span class="keyword">static</span><span class="normal"> </span><span class="usertype">GType</span><span class="normal"> type_list</span><span class="symbol">[</span><span class="number">1</span><span class="symbol">];</span>
+
+<span class="keyword">static</span><span class="normal"> </span><span class="type">void</span>
+<span class="function">foo_extension_register_type</span><span class="normal"> </span><span class="symbol">(</span><span class="usertype">ThunarxProviderPlugin</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">plugin</span><span class="symbol">)</span>
+<span class="cbracket">{</span>
+<span class="normal">  </span><span class="keyword">static</span><span class="normal"> </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">GTypeInfo</span><span class="normal"> info </span><span class="symbol">=</span>
+<span class="normal">  </span><span class="cbracket">{</span>
+<span class="normal">    </span><span class="keyword">sizeof</span><span class="normal"> </span><span class="symbol">(</span><span class="normal">FooExtensionClass</span><span class="symbol">),</span>
+<span class="normal">    <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a></span><span class="symbol">,</span>
+<span class="normal">    <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a></span><span class="symbol">,</span>
+<span class="normal">    </span><span class="symbol">(</span><span class="normal"><a href="http://library.gnome.org/devel/gobject/unstable/gobject-Type-Information.html#GClassInitFunc">GClassInitFunc</a></span><span class="symbol">)</span><span class="normal"> foo_extension_class_init</span><span class="symbol">,</span>
+<span class="normal">    <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a></span><span class="symbol">,</span>
+<span class="normal">    <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a></span><span class="symbol">,</span>
+<span class="normal">    </span><span class="keyword">sizeof</span><span class="normal"> </span><span class="symbol">(</span><span class="normal">FooExtension</span><span class="symbol">),</span>
+<span class="normal">    </span><span class="number">0</span><span class="symbol">,</span>
+<span class="normal">    </span><span class="symbol">(</span><span class="normal"><a href="http://library.gnome.org/devel/gobject/unstable/gobject-Type-Information.html#GInstanceInitFunc">GInstanceInitFunc</a></span><span class="symbol">)</span><span class="normal"> foo_extension_init</span><span class="symbol">,</span>
+<span class="normal">    <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a></span><span class="symbol">,</span>
+<span class="normal">  </span><span class="cbracket">}</span><span class="symbol">;</span>
+
+<span class="normal">  type_list</span><span class="symbol">[</span><span class="number">0</span><span class="symbol">]</span><span class="normal"> </span><span class="symbol">=</span><span class="normal"> </span><span class="function"><a href="ThunarxProviderPlugin.html#thunarx-provider-plugin-register-type">thunarx_provider_plugin_register_type</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">plugin</span><span class="symbol">,</span>
+<span class="normal">                                                        <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Type-Information.html#G-TYPE-OBJECT:CAPS">G_TYPE_OBJECT</a></span><span class="symbol">,</span>
+<span class="normal">                                                        </span><span class="string">"FooExtension"</span><span class="symbol">,</span>
+<span class="normal">                                                        </span><span class="symbol">&amp;</span><span class="normal">info</span><span class="symbol">,</span><span class="normal"> </span><span class="number">0</span><span class="symbol">);</span>
+
+<span class="normal">  </span><span class="comment">/* implement the desired provider interfaces */</span>
+<span class="cbracket">}</span>
+
+<span class="keyword">static</span><span class="normal"> <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Type-Information.html#GType">GType</a></span>
+<span class="function">foo_extension_get_type</span><span class="normal"> </span><span class="symbol">(</span><span class="type">void</span><span class="symbol">)</span>
+<span class="cbracket">{</span>
+<span class="normal">  </span><span class="keyword">return</span><span class="normal"> type_list</span><span class="symbol">[</span><span class="number">0</span><span class="symbol">];</span>
+<span class="cbracket">}</span>
+
+<span class="normal"><a href="http://library.gnome.org/devel/glib/unstable/glib-Dynamic-Loading-of-Modules.html#G-MODULE-EXPORT:CAPS">G_MODULE_EXPORT</a> </span><span class="type">void</span>
+<span class="function">thunar_extension_initialize</span><span class="normal"> </span><span class="symbol">(</span><span class="usertype">ThunarxProviderPlugin</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">plugin</span><span class="symbol">)</span>
+<span class="cbracket">{</span>
+<span class="normal">  </span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">gchar</span><span class="normal"> </span><span class="symbol">*</span><span class="normal">mismatch</span><span class="symbol">;</span>
+
+<span class="normal">  </span><span class="comment">/* verify the versions */</span>
+<span class="normal">  mismatch </span><span class="symbol">=</span><span class="normal"> </span><span class="function"><a href="thunarx-Variables-and-functions-to-check-the-library-version.html#thunarx-check-version">thunarx_check_version</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal"><a href="thunarx-Variables-and-functions-to-check-the-library-version.html#THUNARX-MAJOR-VERSION:CAPS">THUNARX_MAJOR_VERSION</a></span><span class="symbol">,</span>
+<span class="normal">                                    <a href="thunarx-Variables-and-functions-to-check-the-library-version.html#THUNARX-MINOR-VERSION:CAPS">THUNARX_MINOR_VERSION</a></span><span class="symbol">,</span>
+<span class="normal">                                    <a href="thunarx-Variables-and-functions-to-check-the-library-version.html#THUNARX-MICRO-VERSION:CAPS">THUNARX_MICRO_VERSION</a></span><span class="symbol">);</span>
+<span class="normal">  </span><span class="keyword">if</span><span class="normal"> </span><span class="symbol">(</span><span class="function"><a href="http://library.gnome.org/devel/glib/unstable/glib-Miscellaneous-Macros.html#G-UNLIKELY:CAPS">G_UNLIKELY</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">mismatch </span><span class="symbol">!=</span><span class="normal"> <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS">NULL</a></span><span class="symbol">))</span>
+<span class="normal">    </span><span class="cbracket">{</span>
+<span class="normal">      </span><span class="function"><a href="http://library.gnome.org/devel/glib/unstable/glib-Message-Logging.html#g-warning">g_warning</a></span><span class="normal"> </span><span class="symbol">(</span><span class="string">"Version mismatch: %s"</span><span class="symbol">,</span><span class="normal"> mismatch</span><span class="symbol">);</span>
+<span class="normal">      </span><span class="keyword">return</span><span class="symbol">;</span>
+<span class="normal">    </span><span class="cbracket">}</span>
+
+<span class="normal">  </span><span class="function">foo_extension_register_type</span><span class="normal"> </span><span class="symbol">(</span><span class="normal">plugin</span><span class="symbol">);</span>
+<span class="cbracket">}</span>
+
+<span class="normal"><a href="http://library.gnome.org/devel/glib/unstable/glib-Dynamic-Loading-of-Modules.html#G-MODULE-EXPORT:CAPS">G_MODULE_EXPORT</a> </span><span class="type">void</span>
+<span class="function">thunar_extension_shutdown</span><span class="normal"> </span><span class="symbol">(</span><span class="type">void</span><span class="symbol">)</span>
+<span class="cbracket">{</span>
+<span class="normal">  </span><span class="comment">/* any extension-specific shutdown */</span>
+<span class="cbracket">}</span>
+
+<span class="normal"><a href="http://library.gnome.org/devel/glib/unstable/glib-Dynamic-Loading-of-Modules.html#G-MODULE-EXPORT:CAPS">G_MODULE_EXPORT</a> </span><span class="type">void</span>
+<span class="function">thunar_extension_list_types</span><span class="normal"> </span><span class="symbol">(</span><span class="keyword">const</span><span class="normal"> </span><span class="usertype">GType</span><span class="normal"> </span><span class="symbol">**</span><span class="normal">types</span><span class="symbol">,</span>
+<span class="normal">                             </span><span class="usertype">gint</span><span class="normal">         </span><span class="symbol">*</span><span class="normal">n_types</span><span class="symbol">)</span>
+<span class="cbracket">{</span>
+<span class="normal">  </span><span class="symbol">*</span><span class="normal">types </span><span class="symbol">=</span><span class="normal"> type_list</span><span class="symbol">;</span>
+<span class="normal">  </span><span class="symbol">*</span><span class="normal">n_types </span><span class="symbol">=</span><span class="normal"> </span><span class="function"><a href="http://library.gnome.org/devel/glib/unstable/glib-Miscellaneous-Macros.html#G-N-ELEMENTS:CAPS">G_N_ELEMENTS</a></span><span class="normal"> </span><span class="symbol">(</span><span class="normal">type_list</span><span class="symbol">);</span>
+<span class="cbracket">}</span></pre></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+<br class="example-break"><p>
+        You should check the <span class="application">TexOpenTerminal</span> extension, which is included in the Thunar
+        distribution in the <code class="filename">examples/tex-open-terminal</code> directory, for a more
+        complete example of how to write a Thunar extension.
+      </p>
+<div class="sect2" title="Compiling Thunar Extensions">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="thunarx-writing-extensions-compiling-thunar-extensions"></a>Compiling Thunar Extensions</h3></div></div></div>
+<p>
+          To compile a Thunar extension, you need to tell the compiler where to find the
+          <code class="systemitem">thunarx</code> header files and library. This
+          is done with the <code class="literal">pkg-config</code> utility.
+        </p>
+<p>
+          The following interactive shell session demonstrates how <code class="literal">pkg-config</code>
+          is used (the actual output on your system will be different):
+          </p>
+<pre class="screen">
+$ pkg-config --cflags thunarx-2
+-DXTHREADS -DXUSE_MTSAFE_API -I/opt/local/include/thunarx-2 -I/usr/local/include/atk-1.0 \
+-I/usr/local/include/glib-2.0 -I/usr/local/lib/glib-2.0/include -I/usr/X11R6/include/gtk-2.0 \
+-I/usr/X11R6/lib/gtk-2.0/include -I/usr/X11R6/include -I/usr/X11R6/include/pango-1.0 \
+-I/usr/local/include/freetype2 -I/usr/local/include
+$ pkg-config --libs thunarx-2
+-Wl,--rpath -Wl,/usr/local/lib -L/usr/local/lib -L/usr/X11R6/lib -L/opt/local/lib -lthunarx-2</pre>
+<p>
+        </p>
+<p>
+          The easiest way to compile an extension is to use the <span class="emphasis"><em>backticks</em></span>
+          feature of the shell. If you enclose a command in backticks (<span class="emphasis"><em>not single
+          quotes</em></span>), then its output will be substituted into the command line before
+          execution. So to compile an extension, you would type the following:
+          </p>
+<pre class="screen">
+$ gcc -shared -fPIC -DPIC `pkg-config --cflags --libs thunarx-2` foo.c -o foo.so</pre>
+<p>
+        </p>
+</div>
+<div class="sect2" title="Installing Thunar Extensions">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="thunarx-writing-extensions-installing-thunar-extensions"></a>Installing Thunar Extensions</h3></div></div></div>
+<p>
+          To determine the directory where extensions must be installed on your local system,
+          you can use the following command (as mentioned above, the output will be different
+          on your system):
+          </p>
+<pre class="screen">
+$ pkg-config --variable=extensionsdir thunarx-2
+/opt/local/lib/thunarx-2</pre>
+<p>
+        </p>
+<p>
+          For example, to install the extension <code class="filename">foo.so</code> on your system,
+          you would type the following:
+          </p>
+<pre class="screen">
+$ install -d `pkg-config --variable=extensionsdir thunarx-2`
+$ install -c -m 0755 foo.so `pkg-config --variable=extensionsdir thunarx-2`/foo.so</pre>
+<p>
+        </p>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.15</div>
+</body>
+</html>
